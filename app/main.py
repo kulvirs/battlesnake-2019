@@ -3,7 +3,7 @@ import os
 import random
 import bottle
 
-import api
+from .api import ping_response, start_response, move_response, end_response
 
 @bottle.route('/')
 def index():
@@ -28,7 +28,7 @@ def ping():
     A keep-alive endpoint used to prevent cloud application platforms,
     such as Heroku, from sleeping the application instance.
     """
-    return api.ping_response()
+    return ping_response()
 
 @bottle.post('/start')
 def start():
@@ -43,7 +43,7 @@ def start():
 
     color = "#00FF00"
 
-    return api.start_response(color)
+    return start_response(color)
 
 
 @bottle.post('/move')
@@ -59,7 +59,7 @@ def move():
     directions = ['up', 'down', 'left', 'right']
     direction = random.choice(directions)
 
-    return api.move_response(direction)
+    return move_response(direction)
 
 
 @bottle.post('/end')
@@ -72,7 +72,7 @@ def end():
     """
     print(json.dumps(data))
 
-    return api.end_response()
+    return end_response()
 
 # Expose WSGI app (so gunicorn can find it)
 application = bottle.default_app()
