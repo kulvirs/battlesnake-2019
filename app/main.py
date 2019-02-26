@@ -3,7 +3,10 @@ import os
 import random
 import bottle
 
-from .api import ping_response, start_response, move_response, end_response
+if __name__ == "__main__":
+    from api import ping_response, start_response, move_response, end_response
+else:
+    from .api import ping_response, start_response, move_response, end_response
 
 @bottle.route('/')
 def index():
