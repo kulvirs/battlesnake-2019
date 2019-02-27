@@ -2,11 +2,13 @@ import json
 import os
 import random
 import bottle
+import sys
 
-if __name__ == "__main__":
-    from api import ping_response, start_response, move_response, end_response
-else:
-    from .api import ping_response, start_response, move_response, end_response
+from .api import ping_response, start_response, move_response, end_response
+from .grid import Grid, EMPTY, OCCUPIED, FOOD
+from .random_snake import get_valid_random_move
+
+board = Grid()
 
 @bottle.route('/')
 def index():
@@ -36,14 +38,7 @@ def ping():
 @bottle.post('/start')
 def start():
     data = bottle.request.json
-
-    """
-    TODO: If you intend to have a stateful snake AI,
-            initialize your snake state here using the
-            request's data if necessary.
-    """
-    print(json.dumps(data))
-
+    board.create_grid(data['board']['height'], data['board']['width'])
     color = "#00FF00"
 
     return start_response(color)
@@ -51,29 +46,29 @@ def start():
 
 @bottle.post('/move')
 def move():
+    sys.stdout.flush()
     data = bottle.request.json
+    board.clear()
 
-    """
-    TODO: Using the data from the endpoint request object, your
-            snake AI must choose a direction to move in.
-    """
-    print(json.dumps(data))
+    head = [data['you']['body'][0]['x'], data['you']['body'][0]['y']]
+    health = data['you']['health']
+    id = data['you']['id']
 
-    directions = ['up', 'down', 'left', 'right']
-    direction = random.choice(directions)
+    for food in data['board']['food']:
+        board.update_grid_cell(food['x'], food['y'], FOOD)
 
-    return move_response(direction)
+    for snake in data['board']['snakes']:
+        for cell in snake['body']:
+            board.update_grid_cell(cell['x'], cell['y'], OCCUPIED)
+            
+    move = get_valid_random_move(board, head)
+    return move_response(move if move else random.choice(['up', 'down', 'left', 'right']))
 
 
 @bottle.post('/end')
 def end():
     data = bottle.request.json
-
-    """
-    TODO: If your snake AI was stateful,
-        clean up any stateful objects here.
-    """
-    print(json.dumps(data))
+    board.clear()
 
     return end_response()
 
@@ -81,9 +76,10 @@ def end():
 application = bottle.default_app()
 
 if __name__ == '__main__':
+    port = '8080' if len(sys.argv) <= 1 else sys.argv[1]
     bottle.run(
         application,
         host=os.getenv('IP', '0.0.0.0'),
-        port=os.getenv('PORT', '8080'),
+        port=os.getenv('PORT', port),
         debug=os.getenv('DEBUG', True)
     )
