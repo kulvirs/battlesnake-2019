@@ -5,13 +5,9 @@ FOOD = 2
 class Grid:
 
     # Initializes a two-dimensional array representing the grid.
-    def create_grid(self, height, width):
+    def __init__(self, height, width):
         self.height = height
         self.width = width
-        self.grid = [[EMPTY for i in range(self.width)] for j in range(self.height)]
-
-    # Makes all cells in the grid empty.
-    def clear(self):
         self.grid = [[EMPTY for i in range(self.width)] for j in range(self.height)]
 
     # Returns true if the given coordinates exist on the board, false otherwise.

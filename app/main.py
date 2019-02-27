@@ -8,8 +8,6 @@ from .api import ping_response, start_response, move_response, end_response
 from .grid import Grid, EMPTY, OCCUPIED, FOOD
 from .random_snake import get_valid_random_move
 
-board = Grid()
-
 @bottle.route('/')
 def index():
     return '''
@@ -38,7 +36,6 @@ def ping():
 @bottle.post('/start')
 def start():
     data = bottle.request.json
-    board.create_grid(data['board']['height'], data['board']['width'])
     color = "#00FF00"
 
     return start_response(color)
@@ -48,11 +45,14 @@ def start():
 def move():
     sys.stdout.flush()
     data = bottle.request.json
-    board.clear()
 
     head = [data['you']['body'][0]['x'], data['you']['body'][0]['y']]
     health = data['you']['health']
     id = data['you']['id']
+    height = data['board']['height']
+    width = data['board']['width']
+
+    board = Grid(height, width)
 
     for food in data['board']['food']:
         board.update_grid_cell(food['x'], food['y'], FOOD)
@@ -68,8 +68,6 @@ def move():
 @bottle.post('/end')
 def end():
     data = bottle.request.json
-    board.clear()
-
     return end_response()
 
 # Expose WSGI app (so gunicorn can find it)
