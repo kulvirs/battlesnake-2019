@@ -7,6 +7,7 @@ import sys
 from .api import ping_response, start_response, move_response, end_response
 from .grid import Grid, EMPTY, OCCUPIED, FOOD
 from .random_snake import get_valid_random_move
+from .path_finder_snake import a_star_search
 
 @bottle.route('/')
 def index():
@@ -46,7 +47,7 @@ def move():
     sys.stdout.flush()
     data = bottle.request.json
 
-    head = [data['you']['body'][0]['x'], data['you']['body'][0]['y']]
+    head = (data['you']['body'][0]['x'], data['you']['body'][0]['y']) 
     health = data['you']['health']
     id = data['you']['id']
     height = data['board']['height']
@@ -54,15 +55,30 @@ def move():
 
     board = Grid(height, width)
 
+    closest_food_dist, closest_food = float('inf'), None
     for food in data['board']['food']:
-        board.update_grid_cell(food['x'], food['y'], FOOD)
+        food_x, food_y = food['x'], food['y']
+        board.update_grid_cell(food_x, food_y, FOOD)
+        food_dist = board.manhattan_distance(head[0], head[1], food_x, food_y)
+        if food_dist < closest_food_dist:
+            closest_food = (food_x, food_y)
+            closest_food_dist = food_dist
 
     for snake in data['board']['snakes']:
         for cell in snake['body']:
             board.update_grid_cell(cell['x'], cell['y'], OCCUPIED)
-            
-    move = get_valid_random_move(board, head)
-    return move_response(move if move else random.choice(['up', 'down', 'left', 'right']))
+    
+    move = a_star_search(head, closest_food, board)      
+
+    if not move:
+        print("path-finding failed")
+        move = get_valid_random_move(board, head)
+
+    if not move:
+        print("no valid moves")
+        move = random.choice(['up', 'down', 'left', 'right'])
+
+    return move_response(move)
 
 
 @bottle.post('/end')
