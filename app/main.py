@@ -41,7 +41,7 @@ def start():
     data = bottle.request.json
     color = "#00FF00"
 
-    return start_response(color)
+    return start_response("red")
 
 
 @bottle.post('/move')
@@ -56,6 +56,7 @@ def move():
     tail = (data['you']['body'][length-1]['x'], data['you']['body'][length-1]['y'])
     height = data['board']['height']
     width = data['board']['width']
+    num_snakes = len(data['board']['snakes'])
 
     board = Grid(height, width)
 
@@ -82,7 +83,7 @@ def move():
         
         target_food = safest_food if safest_food else largest_reachable_food
 
-        if target_food and not passive_heuristic(board, health, head, target_food, height, length):
+        if target_food and not passive_heuristic(board, health, head, target_food, height, length, num_snakes):
             # Need food.
             print("looking for food", target_food)
             move = a_star_search(head, target_food, board)
