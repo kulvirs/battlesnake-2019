@@ -63,30 +63,27 @@ def move():
     add_snakes_to_board(data['board']['snakes'], id, length, board)
     foods = add_food_to_board(data['board']['food'], head, board)
 
-    candidate_food = foods.pop() if foods else None
     largest_reachable_food, largest_size = None, 0
     safest_food = None
     move = None
 
-    if candidate_food:
-        while foods:
-            component_size, reachable, heads = find_component(candidate_food, head, board)
-            if component_size < length or not reachable or heads:
-                if component_size > largest_size and reachable:
-                    largest_reachable_food, largest_size = candidate_food, component_size
+    while foods:
+        candidate_food = foods.pop()
+        component_size, reachable, heads = find_component(candidate_food, head, board)
+        if component_size < length or not reachable or heads:
+            if component_size > largest_size and reachable:
+                largest_reachable_food, largest_size = candidate_food, component_size
+        else:
+            print("found safest food")
+            safest_food = candidate_food
+            break
+    
+    target_food = safest_food if safest_food else largest_reachable_food
 
-                candidate_food = foods.pop()
-            else:
-                print("found safest food")
-                safest_food = candidate_food
-                break
-        
-        target_food = safest_food if safest_food else largest_reachable_food
-
-        if target_food and not passive_heuristic(board, health, head, target_food, height, length, num_snakes):
-            # Need food.
-            print("looking for food", target_food)
-            move = a_star_search(head, target_food, board)
+    if target_food and not passive_heuristic(board, health, head, target_food, height, length, num_snakes):
+        # Need food.
+        print("looking for food", target_food)
+        move = a_star_search(head, target_food, board)
 
     if not move:
         # Look for targets
