@@ -39,9 +39,9 @@ def ping():
 @bottle.post('/start')
 def start():
     data = bottle.request.json
-    color = "#00FF00"
+    color = "#8A2BE2"
 
-    return start_response("red")
+    return start_response(color)
 
 
 @bottle.post('/move')
