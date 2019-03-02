@@ -18,10 +18,14 @@ def a_star_search(source, dest, board):
             visited[u] = True
 
             if u == dest:
-                while prev[u] != source:
+                try {
+                    while prev[u] != source:
                     u = prev[u]
-                return board.get_direction(source[0], source[1], u[0], u[1])
-            
+                    return board.get_direction(source[0], source[1], u[0], u[1])
+                } except KeyError {
+                    return None
+                }
+                
             if u == source:
                 valid_types = [EMPTY, FOOD, TARGET]
             else:
