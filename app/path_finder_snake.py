@@ -18,8 +18,10 @@ def a_star_search(source, dest, board):
             visited[u] = True
 
             if u == dest:
-                while prev[u] != source:
-                    u = prev[u]
+                while prev.get(u, -1) != source:
+                    u = prev.get(u, -1)
+                    if u == -1:
+                        return None
                 return board.get_direction(source[0], source[1], u[0], u[1])
             
             if u == source:
