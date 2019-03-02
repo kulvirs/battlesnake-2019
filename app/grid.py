@@ -1,6 +1,10 @@
 EMPTY = 0
 OCCUPIED = 1
 FOOD = 2
+DANGER = 3
+SNAKE_HEAD = 4
+TARGET = 5
+MY_HEAD = 6
 
 class Grid:
 
@@ -9,7 +13,6 @@ class Grid:
         self.height = height
         self.width = width
         self.grid = [[EMPTY for i in range(self.width)] for j in range(self.height)]
-        self.food = []
 
     # Returns true if the given coordinates exist on the board, false otherwise.
     def valid_coordinates(self, x, y):
@@ -23,6 +26,9 @@ class Grid:
     def update_grid_cell(self, x, y, val):
         if self.valid_coordinates(x, y):
             self.grid[y][x] = val
+
+    def get_cell(self, x, y):
+        return self.grid[y][x]
 
     # Returns the coordinates of all neighbours of the given cell.
     def get_neighbours(self, x, y):

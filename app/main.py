@@ -4,10 +4,12 @@ import random
 import bottle
 import sys
 
-from .api import ping_response, start_response, move_response, end_response
-from .grid import Grid, EMPTY, OCCUPIED, FOOD
-from .random_snake import get_valid_random_move
-from .path_finder_snake import a_star_search
+from .api import *
+from .random_snake import *
+from .path_finder_snake import *
+from .utils import *
+from .dfs import *
+from .passive import *
 
 @bottle.route('/')
 def index():
@@ -50,28 +52,64 @@ def move():
     head = (data['you']['body'][0]['x'], data['you']['body'][0]['y']) 
     health = data['you']['health']
     id = data['you']['id']
+    length = len(data['you']['body'])
+    tail = (data['you']['body'][length-1]['x'], data['you']['body'][length-1]['y'])
     height = data['board']['height']
     width = data['board']['width']
 
     board = Grid(height, width)
 
-    closest_food_dist, closest_food = float('inf'), None
-    for food in data['board']['food']:
-        food_x, food_y = food['x'], food['y']
-        board.update_grid_cell(food_x, food_y, FOOD)
-        food_dist = board.manhattan_distance(head[0], head[1], food_x, food_y)
-        if food_dist < closest_food_dist:
-            closest_food = (food_x, food_y)
-            closest_food_dist = food_dist
+    add_snakes_to_board(data['board']['snakes'], id, length, board)
+    foods = add_food_to_board(data['board']['food'], head, board)
 
-    for snake in data['board']['snakes']:
-        for cell in snake['body']:
-            board.update_grid_cell(cell['x'], cell['y'], OCCUPIED)
-    
-    move = a_star_search(head, closest_food, board)      
+    candidate_food = foods.pop() if foods else None
+    largest_reachable_food, largest_size = None, 0
+    safest_food = None
+    move = None
+
+    if candidate_food:
+        while foods:
+            component_size, reachable, heads = find_component(candidate_food, head, board)
+            if component_size < length or not reachable or heads:
+                if component_size > largest_size and reachable:
+                    largest_reachable_food, largest_size = candidate_food, component_size
+
+                candidate_food = foods.pop()
+            else:
+                print("found safest food")
+                safest_food = candidate_food
+                break
+        
+        target_food = safest_food if safest_food else largest_reachable_food
+
+        if target_food and not passive_heuristic(board, health, head, target_food, height, length):
+            # Need food.
+            print("looking for food", target_food)
+            move = a_star_search(head, target_food, board)
 
     if not move:
-        print("path-finding failed")
+        # Look for targets
+        print("looking for targets")
+        targets = board.get_neighbours_with_val(head[0], head[1], [TARGET])
+        for target in targets:
+            size, reachable, _ = find_component(target, head, board)
+            if size > length and reachable:
+                move = board.get_direction(head[0], head[1], target[0], target[1])
+                break
+        
+    if not move:
+        # Chase tail
+        print("chasing tail")
+        move = a_star_search(head, tail, board)
+
+    if not move:
+        # Choose largest component.
+        print("choosing largest component")
+        move = choose_largest_component(head, board, length)     
+
+    if not move:
+        # Choose valid random move
+        print("choosing random valid move")
         move = get_valid_random_move(board, head)
 
     if not move:
