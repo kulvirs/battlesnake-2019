@@ -31,8 +31,7 @@ def choose_largest_component(head, board, length):
     moves = []
     for neighbour in board.get_neighbours_with_val(head[0], head[1], [EMPTY, FOOD, TARGET, DANGER]):
         size, _, _ = find_component(neighbour, head, board)
-        if size <= length:
-            moves.append([neighbour, size])
+        moves.append([neighbour, size])
 
     danger_move, danger_size = None, 0
     safe_move, safe_size = None, 0
@@ -43,7 +42,11 @@ def choose_largest_component(head, board, length):
         elif val != DANGER and size > safe_size:
             safe_move, safe_size = move, size
 
-    if safe_move:
+    if safe_move and safe_size >= length:
+        return board.get_direction(head[0], head[1], safe_move[0], safe_move[1])
+    elif danger_move and danger_size >= length:
+        return board.get_direction(head[0], head[1], danger_move[0], danger_move[1])
+    elif safe_move:
         return board.get_direction(head[0], head[1], safe_move[0], safe_move[1])
     elif danger_move:
         return board.get_direction(head[0], head[1], danger_move[0], danger_move[1])
