@@ -80,7 +80,7 @@ def move():
     
     target_food = safest_food if safest_food else largest_reachable_food
 
-    if target_food and not passive_heuristic(board, health, head, target_food, height, length, num_snakes):
+    if target_food and not passive_heuristic(board, health, head, target_food, height, length, id, num_snakes, data['board']['snakes']):
         # Need food.
         print("looking for food", target_food)
         move = a_star_search(head, target_food, board)
